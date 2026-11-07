@@ -1,0 +1,43 @@
+
+digraph device_api {
+  graph [bgcolor="white", fontname="PingFang SC", fontsize=12, rankdir=TB,
+         nodesep=0.28, ranksep=0.30, pad=0.20, newrank=true];
+  node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11,
+        color="#4874CB", fillcolor="#EAF0FA", penwidth=1.2, margin="0.11,0.06"];
+  edge [fontname="PingFang SC", fontsize=9, color="#8A94A6", arrowsize=0.55, penwidth=1.0];
+
+  api [label="HarmonyDevice（src/device/harmony/session.ts）\nconnect · observe · find · tap · swipe · typeText · pressKey · launchApp · stopApp · close",
+       fillcolor="#4874CB", fontcolor="white", color="#4874CB", fontsize=12];
+
+  subgraph cluster_inner {
+    label="会话与约束"; fontcolor="#EE822F"; color="#EE822F"; style="rounded,dashed"; bgcolor="#FFFCF8";
+    node [fillcolor="#FDF0E6", color="#EE822F"];
+    selectors [label="selectors\ntext / id / hint / name + index", color="#EE822F"];
+    lease     [label="lease\n跨进程文件租约 · DEVICE_BUSY", color="#EE822F"];
+    errors    [label="errors\n统一错误码 + nextStep", color="#EE822F"];
+  }
+  subgraph cluster_driver {
+    label="设备驱动"; fontcolor="#75BD42"; color="#75BD42"; style="rounded,dashed"; bgcolor="#FAFCF7";
+    node [fillcolor="#EEF7E8", color="#75BD42"];
+    hdc    [label="Hdc（src/device/hdc.ts）\nshell · file send/recv · targets", color="#75BD42"];
+    agent  [label="uitest agent\ndumpLayout · screenshot · input", color="#75BD42"];
+    hypium [label="Hypium RPC\n测试框架可选通道", color="#75BD42"];
+  }
+  device [label="OpenHarmony 设备", shape=box3d, style="filled", fillcolor="#0F1423", fontcolor="white", color="#0F1423", fontsize=12];
+
+  invariants [shape=box, style="rounded,filled", fillcolor="#FCE9EC", color="#E54C5E",
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="3" CELLPADDING="2">
+      <TR><TD COLSPAN="2" ALIGN="CENTER"><B>安全不变量（由 HarmonyDevice 强制）</B></TD></TR>
+      <TR><TD ALIGN="LEFT">① 动作前必须有 observation；mutate 后立即失效</TD><TD ALIGN="LEFT">⑤ 动作异常 → ACTION_OUTCOME_UNCERTAIN，replayAction=false</TD></TR>
+      <TR><TD ALIGN="LEFT">② 坐标动作绑定 observationId + bundle + 屏幕尺寸 + contentSig</TD><TD ALIGN="LEFT">⑥ 同一 serial 文件租约独占；锁屏不返回树与截图</TD></TR>
+      <TR><TD ALIGN="LEFT">③ 任一变化 → STALE_OBSERVATION，不执行动作</TD><TD ALIGN="LEFT">⑦ 认证字段命中敏感词 → SENSITIVE_FIELD，拒绝代输</TD></TR>
+      <TR><TD ALIGN="LEFT">④ selector 多候选 → AMBIGUOUS_TARGET + 候选列表，不猜</TD><TD ALIGN="LEFT"></TD></TR>
+    </TABLE>>];
+
+  api -> selectors; api -> lease; api -> errors;
+  api -> hdc; api -> agent; api -> hypium;
+  hdc -> device; agent -> device; hypium -> device;
+  device -> invariants [style=invis];
+  { rank=same; selectors; lease; errors; }
+  { rank=same; hdc; agent; hypium; }
+}

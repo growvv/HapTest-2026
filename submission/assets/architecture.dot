@@ -1,0 +1,61 @@
+
+digraph architecture {
+  graph [bgcolor="white", fontname="PingFang SC", fontsize=12, rankdir=TB,
+         nodesep=0.22, ranksep=0.30, pad=0.18, compound=true, newrank=true];
+  node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11,
+        color="#4874CB", fillcolor="#EAF0FA", penwidth=1.2, margin="0.10,0.06"];
+  edge [fontname="PingFang SC", fontsize=9, color="#8A94A6", arrowsize=0.55, penwidth=1.0];
+
+  subgraph cluster_entry {
+    label="驱动入口"; fontcolor="#4874CB"; color="#4874CB"; style="rounded,dashed"; bgcolor="#FAFBFE";
+    node [fillcolor="white"];
+    cli   [label="harmony CLI\n命令 · JSON 输出", color="#4874CB"];
+    serve [label="harmony serve\nJSON-lines 会话", color="#4874CB"];
+    fuzzc [label="Fuzz 入口\n--policy", color="#4874CB"];
+    web   [label="Web Viewer\nui-viewer / screen", color="#4874CB"];
+  }
+
+  subgraph cluster_core {
+    label="核心服务"; fontcolor="#EE822F"; color="#EE822F"; style="rounded,dashed"; bgcolor="#FFFCF8";
+    node [fillcolor="#FDF0E6", color="#EE822F"];
+    hdev   [label="HarmonyDevice\nobserve · tap · swipe", color="#EE822F"];
+    runner [label="Fuzz / Runner\n调度与生命周期", color="#EE822F"];
+    policy [label="Policy 管线\n随机 · DFS · 静态 · LLM", color="#EE822F"];
+    ptg    [label="PTG / Model\n页面迁移图", color="#EE822F"];
+  }
+
+  subgraph cluster_analysis {
+    label="分析与观测"; fontcolor="#30C0B4"; color="#30C0B4"; style="rounded,dashed"; bgcolor="#F7FCFB";
+    node [fillcolor="#E6F7F5", color="#30C0B4"];
+    static [label="静态分析\nArkUI 布局", color="#30C0B4"];
+    llm    [label="LLM 引导\n动作评分", color="#30C0B4"];
+    perf   [label="性能观测\nDevEco trace", color="#30C0B4", style="rounded,filled,dashed"];
+    report [label="证据与报告\n日志 · 截图 · 用例", color="#30C0B4"];
+  }
+
+  subgraph cluster_device {
+    label="设备适配"; fontcolor="#75BD42"; color="#75BD42"; style="rounded,dashed"; bgcolor="#FAFCF7";
+    node [fillcolor="#EEF7E8", color="#75BD42"];
+    hdc    [label="HDC\nshell · file", color="#75BD42"];
+    uitest [label="uitest agent\nUI 树 · 截图", color="#75BD42"];
+    hypium [label="Hypium RPC\n测试协议", color="#75BD42"];
+    arkui  [label="ArkUI Inspector\n控件树", color="#75BD42"];
+  }
+
+  device [label="OpenHarmony 设备\nArkTS 应用 · ArkUI · uitest", shape=box3d,
+          style="filled", fillcolor="#0F1423", fontcolor="white", color="#0F1423", fontsize=13];
+
+  cli -> hdev; serve -> hdev;
+  fuzzc -> runner; runner -> policy; policy -> ptg; ptg -> hdev;
+  policy -> static [style=dashed, label="源码"];
+  policy -> llm [style=dashed, label="--llm"];
+  hdev -> hdc; hdev -> uitest; hdev -> hypium; hdev -> arkui;
+  hdc -> device; uitest -> device; hypium -> device; arkui -> device;
+  runner -> report [style=dashed, label="结果"];
+  perf -> report [style=dashed];
+
+  { rank=same; cli; serve; fuzzc; web; }
+  { rank=same; hdev; runner; policy; ptg; }
+  { rank=same; static; llm; perf; report; }
+  { rank=same; hdc; uitest; hypium; arkui; }
+}

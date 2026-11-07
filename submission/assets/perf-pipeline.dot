@@ -1,0 +1,37 @@
+
+digraph perf_pipeline {
+  graph [bgcolor="white", fontname="PingFang SC", fontsize=12, rankdir=TB,
+         nodesep=0.28, ranksep=0.34, pad=0.18, newrank=true];
+  node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11,
+        color="#30C0B4", fillcolor="#E6F7F5", penwidth=1.2, margin="0.11,0.06"];
+  edge [fontname="PingFang SC", fontsize=9, color="#8A94A6", arrowsize=0.55, penwidth=1.0];
+
+  probe [label="probeMetrics()
+探测可用帧数据源", color="#4874CB", fillcolor="#EAF0FA"];
+  hitrace [label="hitrace
+--trace_begin / --trace_finish", color="#EE822F", fillcolor="#FDF0E6"];
+  htrace [label=".htrace
+原始 trace", color="#EE822F", fillcolor="#FDF0E6"];
+  streamer [label="trace_streamer
+DevEco 本地解析器", color="#30C0B4", fillcolor="#E6F7F5"];
+  sqlite [label="SQLite
+frame_slice · frame_total_statistics", color="#30C0B4", fillcolor="#E6F7F5"];
+  parser [label="FrameParser
+逐帧 duration + flag", color="#75BD42", fillcolor="#EEF7E8"];
+  sample [label="FrameSample
+totalFrames · jankFrames · p95", color="#75BD42", fillcolor="#EEF7E8"];
+  report [label="ActionTrace / report
+每次动作的帧与耗时", color="#E54C5E", fillcolor="#FCE9EC"];
+
+  probe -> hitrace [label="A 路线", constraint=false];
+  hitrace -> htrace;
+  htrace -> streamer [constraint=false];
+  streamer -> sqlite;
+  sqlite -> parser [constraint=false];
+  parser -> sample;
+  sample -> report [constraint=false];
+  { rank=same; probe; hitrace; }
+  { rank=same; htrace; streamer; }
+  { rank=same; sqlite; parser; }
+  { rank=same; sample; report; }
+}
